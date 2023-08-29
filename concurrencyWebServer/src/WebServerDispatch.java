@@ -1,8 +1,6 @@
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -11,8 +9,6 @@ import java.util.regex.Pattern;
  */
 public class WebServerDispatch implements Runnable{
 
-    private static final Logger logger = Logger.getLogger(WebServer.class.getName());
-
     private final Socket socket;
 
     public WebServerDispatch(Socket clientSocket) {
@@ -20,12 +16,10 @@ public class WebServerDispatch implements Runnable{
         this.socket=clientSocket;
     }
 
-
     @Override
     public void run() {
 
         dispatch(socket);
-        System.out.println("Thread: " + Thread.currentThread().getName());
 
     }
 
@@ -46,12 +40,7 @@ public class WebServerDispatch implements Runnable{
             String httpVerb = request.split(" ")[0]; // verb is the first word of request
             String resource = request.split(" ").length > 1 ? request.split(" ")[1] : null; // second word of request
 
-            logger.log(Level.INFO, "Request received: " + request);
-            logger.log(Level.FINE, "Headers : \n" + requestHeaders);
-
-
             if (!httpVerb.equals("GET")) {
-                logger.log(Level.WARNING, "request not supported from " + getAddress(clientSocket));
                 reply(out, HttpHelper.notAllowed());
                 close(clientSocket);
                 return;
@@ -59,7 +48,6 @@ public class WebServerDispatch implements Runnable{
             }
 
             if (resource == null) {
-                logger.log(Level.WARNING, "resource not specified from " + getAddress(clientSocket));
                 reply(out, HttpHelper.badRequest());
                 close(clientSocket);
                 return;
@@ -67,7 +55,6 @@ public class WebServerDispatch implements Runnable{
 
             String filePath = getPathForResource(resource);
             if (!HttpMedia.isSupported(filePath)) {
-                logger.log(Level.WARNING, "request for content type not supported from " + getAddress(clientSocket));
                 reply(out, HttpHelper.unsupportedMedia());
                 close(clientSocket);
                 return;
@@ -79,8 +66,6 @@ public class WebServerDispatch implements Runnable{
                 reply(out, HttpHelper.ok());
 
             } else {
-
-                logger.log(Level.WARNING, file.getPath() + " not found");
                 reply(out, HttpHelper.notFound());
                 filePath = WebServer.DOCUMENT_ROOT + "404.html";
                 file = new File(filePath);
@@ -94,12 +79,8 @@ public class WebServerDispatch implements Runnable{
             close(clientSocket);
 
         } catch (SocketException ex) {
-
-            logger.log(Level.INFO, "client disconnected " + getAddress(clientSocket));
-
+            System.out.println(ex.getMessage());
         } catch (IOException ex) {
-
-            logger.log(Level.WARNING, ex.getMessage());
             close(clientSocket);
         }
     }
@@ -115,7 +96,6 @@ public class WebServerDispatch implements Runnable{
         }
 
         return builder.toString();
-
     }
 
     private String getPathForResource(String resource) {
@@ -152,19 +132,10 @@ public class WebServerDispatch implements Runnable{
     }
 
     private void close(Socket clientSocket) {
-
         try {
-
-            logger.log(Level.INFO, "closing client socket for " + getAddress(clientSocket));
             clientSocket.close();
-
         } catch (IOException e) {
-
-            logger.log(Level.INFO, e.getMessage());
+            System.out.println(e.getMessage());
         }
-    }
-
-    private String getAddress(Socket socket) {
-        return socket.getInetAddress().getHostAddress() + ":" + socket.getLocalPort();
     }
 }
