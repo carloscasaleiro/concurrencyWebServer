@@ -12,26 +12,15 @@ public class WebServer {
 
     public static void main(String[] args) {
 
-        try {
-
-            int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
-
             WebServer webServer = new WebServer();
-            webServer.listen(port);
-
-        } catch (NumberFormatException e) {
-
-            System.err.println("Usage: WebServer [PORT]");
-            System.exit(1);
-
-        }
+            webServer.listen();
     }
 
-    private void listen(int port) {
+    private void listen() {
 
         try {
 
-            ServerSocket bindSocket = new ServerSocket(port);
+            ServerSocket bindSocket = new ServerSocket(DEFAULT_PORT);
             serve(bindSocket);
 
         } catch (IOException e) {
